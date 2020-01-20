@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Tangy.Models.SubCategory>
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h4>Sub Category List</h4>
+<hr />
+
+<partial name="_CreateButtonPartial" />
+
+<table class="table table-hover table-bordered table-striped">
+    <thead class="thead-dark">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(m => m.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(m => m.Category.Name)
+            </th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(m => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(m => item.Category.Name)
+                </td>
+                <td>
+                    <partial name="_TableButtonPartial" model="item.Id">
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
