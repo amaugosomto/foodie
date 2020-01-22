@@ -54,7 +54,7 @@ namespace Tangy.Controllers
                 if (doesSubCategoryEsists > 0 && model.IsNew)
                 {
                     //error
-                    StatusMessage = "Error: Sub Category NAme already Exists";
+                    StatusMessage = "Error: Sub Category Name already Exists";
                 }
                 else
                 {
@@ -87,6 +87,103 @@ namespace Tangy.Controllers
                 StatusMessage = StatusMessage
             };
             return View(modelVM);
+        }
+
+        //GET Edit
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var subCategory = await  _db.SubCategory.SingleOrDefaultAsync(m => m.Id == id);
+            if (subCategory == null)
+                return NotFound();
+
+            SubCategoryAndCategoryViewModel model = new SubCategoryAndCategoryViewModel()
+            {
+                CategoryList = _db.Category.ToList(),
+                SubCategory = subCategory,
+                SubCategoryList = _db.SubCategory.Select(p => p.Name).Distinct().ToList()
+            };
+
+            return View(model);
+        }
+
+        // POST Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit (int id, SubCategoryAndCategoryViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var doesSubCategoryEsists = _db.SubCategory.Where(s => s.Name == model.SubCategory.Name).Count();
+                var doesSubCatAndCatEsists = _db.SubCategory.Where(s => s.Name == model.SubCategory.Name && s.CategoryId == model.SubCategory.CategoryId).Count();
+
+                if (doesSubCategoryEsists == 0)
+                {
+                    StatusMessage = "Error : Sub categoty does not exist";
+                } else
+                {
+                    if (doesSubCatAndCatEsists > 0)
+                    {
+                        StatusMessage = "Error : Category and Sub Category combination already exists";
+                    } else
+                    {
+                        var subCatFromDb = _db.SubCategory.Find(id);
+                        subCatFromDb.Name = model.SubCategory.Name;
+                        subCatFromDb.CategoryId = model.SubCategory.CategoryId;
+
+                        await _db.SaveChangesAsync();
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+
+            }
+
+            SubCategoryAndCategoryViewModel modelVM = new SubCategoryAndCategoryViewModel()
+            {
+                CategoryList = _db.Category.ToList(),
+                SubCategory = model.SubCategory,
+                SubCategoryList = _db.SubCategory.Select(p => p.Name).Distinct().ToList(),
+                StatusMessage = StatusMessage
+            };
+            return View(modelVM);
+        }
+
+        // Get Details
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var subCategory = await _db.SubCategory.Include(s => s.Category).SingleOrDefaultAsync(m => m.Id == id);
+            if (subCategory == null) return NotFound();
+
+            return View(subCategory);
+        }
+
+        // Get Delete
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var subCategory = await _db.SubCategory.Include(s => s.Category).SingleOrDefaultAsync(m => m.Id == id);
+            if (subCategory == null) return NotFound();
+
+            return View(subCategory);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var subCategory = await _db.SubCategory.SingleOrDefaultAsync(m => m.Id == id);
+            _db.SubCategory.Remove(subCategory);
+            await _db.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+
         }
     }
 }
